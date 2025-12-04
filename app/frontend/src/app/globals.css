@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f3f4f6;
+}
+
+/* Calendar (react-calendar) 커스터마이징 */
+.big-calendar .react-calendar {
+  width: 100%;
+  max-width: 1200px;
+  border: none;
+  font-family: inherit;
+}
+
+.big-calendar .react-calendar__navigation {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.big-calendar .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.big-calendar .react-calendar__tile {
+  height: 5.5rem;
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+@media (min-width: 1280px) {
+  .big-calendar .react-calendar__tile {
+    height: 6.5rem;
+  }
+}
+
+.big-calendar .react-calendar__tile abbr {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.big-calendar .react-calendar__tile--now {
+  background: #e0f2fe;
+}
+
+.big-calendar .react-calendar__tile--active {
+  background: #2563eb;
+  color: white;
+}
