@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -120,14 +121,19 @@ fun AddEditDocumentScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditMode) "문서 수정" else "새 문서 추가") },
+                title = { 
+                    Text(
+                        if (isEditMode) "문서 수정" else "새 문서 추가",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, "뒤로")
                     }
                 },
                 actions = {
-                    TextButton(
+                    Button(
                         onClick = {
                             if (title.isNotBlank() && selectedCategoryId != null) {
                                 val allImagePaths = mutableListOf<String>()
@@ -163,7 +169,9 @@ fun AddEditDocumentScreen(
                                     onNavigateBack()
                                 }
                             }
-                        }
+                        },
+                        modifier = Modifier.padding(end = 8.dp),
+                        enabled = title.isNotBlank() && selectedCategoryId != null && (imageUriList.isNotEmpty() || savedImagePaths.isNotEmpty())
                     ) {
                         Text("저장")
                     }
@@ -176,109 +184,149 @@ fun AddEditDocumentScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp), // 패딩 증가
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Image List
-            Text("이미지", style = MaterialTheme.typography.titleMedium)
-            
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Show saved files (images and PDFs)
-                itemsIndexed(savedImagePaths) { index, path ->
-                    val isPdf = fileTypes.getOrNull(index) == "PDF"
-                    FilePreviewCard(
-                        filePath = path,
-                        isPdf = isPdf,
-                        onDelete = {
-                            savedImagePaths = savedImagePaths.filterIndexed { i, _ -> i != index }
-                            fileTypes = fileTypes.filterIndexed { i, _ -> i != index }
-                        }
-                    )
-                }
+            // Image Section
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "이미지 및 문서", 
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
                 
-                // Show newly selected images
-                itemsIndexed(imageUriList) { index, uri ->
-                    ImageItemCard(
-                        imageData = uri,
-                        onDelete = {
-                            imageUriList = imageUriList.filterIndexed { i, _ -> i != index }
-                        }
-                    )
-                }
-                
-                // Add image button
-                item {
-                    Card(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clickable { showImagePicker = true },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        OutlinedCard(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clickable { showImagePicker = true },
+                            colors = CardDefaults.outlinedCardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            ),
+                            shape = MaterialTheme.shapes.medium,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(36.dp))
-                                Text("이미지 추가", style = MaterialTheme.typography.bodySmall)
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.AddAPhoto, 
+                                        null, 
+                                        modifier = Modifier.size(28.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        "추가", 
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
                         }
                     }
-                }
-            }
 
-            // Title
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("제목 *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            // Category
-            val selectedCategory = categories.find { it.id == selectedCategoryId }
-            OutlinedCard(
-                onClick = { showCategoryPicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("카테고리", style = MaterialTheme.typography.labelMedium)
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            selectedCategory?.name ?: "선택하세요",
-                            style = MaterialTheme.typography.bodyLarge
+                    // Show saved files (images and PDFs)
+                    itemsIndexed(savedImagePaths) { index, path ->
+                        val isPdf = fileTypes.getOrNull(index) == "PDF"
+                        FilePreviewCard(
+                            filePath = path,
+                            isPdf = isPdf,
+                            onDelete = {
+                                savedImagePaths = savedImagePaths.filterIndexed { i, _ -> i != index }
+                                fileTypes = fileTypes.filterIndexed { i, _ -> i != index }
+                            }
                         )
                     }
-                    Icon(Icons.Default.ArrowDropDown, null)
+                    
+                    // Show newly selected images
+                    itemsIndexed(imageUriList) { index, uri ->
+                        ImageItemCard(
+                            imageData = uri,
+                            onDelete = {
+                                imageUriList = imageUriList.filterIndexed { i, _ -> i != index }
+                            }
+                        )
+                    }
                 }
             }
 
-            // Memo
-            OutlinedTextField(
-                value = memo,
-                onValueChange = { memo = it },
-                label = { Text("메모 (선택)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 100.dp),
-                maxLines = 5
-            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // Info Section
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "문서 정보", 
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                // Title
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("문서 제목 *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
+
+                // Category
+                val selectedCategory = categories.find { it.id == selectedCategoryId }
+                OutlinedCard(
+                    onClick = { showCategoryPicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "카테고리 *", 
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                selectedCategory?.name ?: "카테고리 선택",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (selectedCategoryId != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(Icons.Default.ArrowDropDown, null, tint = MaterialTheme.colorScheme.outline)
+                    }
+                }
+
+                // Memo
+                OutlinedTextField(
+                    value = memo,
+                    onValueChange = { memo = it },
+                    label = { Text("메모 (선택)") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 120.dp),
+                    maxLines = 5,
+                    shape = MaterialTheme.shapes.medium
+                )
+            }
         }
     }
 

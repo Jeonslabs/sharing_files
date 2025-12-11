@@ -45,8 +45,13 @@ fun MainScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("파일저장") },
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        "FileShare",
+                        style = MaterialTheme.typography.titleLarge
+                    ) 
+                },
                 actions = {
                     if (selectionMode) {
                         IconButton(onClick = {
@@ -75,12 +80,20 @@ fun MainScreen(
                             Icon(Icons.Default.Settings, "설정")
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                )
             )
         },
         floatingActionButton = {
             if (!selectionMode) {
-                FloatingActionButton(onClick = onNavigateToAdd) {
+                FloatingActionButton(
+                    onClick = onNavigateToAdd,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
                     Icon(Icons.Default.Add, "문서 추가")
                 }
             }
@@ -90,6 +103,7 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .padding(horizontal = 16.dp) // 전체적인 여백 추가
         ) {
             // Search Bar
             if (showSearchBar) {
@@ -98,7 +112,7 @@ fun MainScreen(
                     onValueChange = { documentViewModel.updateSearchQuery(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(vertical = 8.dp),
                     placeholder = { Text("제목 또는 메모 검색") },
                     leadingIcon = { Icon(Icons.Default.Search, null) },
                     trailingIcon = {
@@ -108,7 +122,13 @@ fun MainScreen(
                             }
                         }
                     },
-                    singleLine = true
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    )
                 )
             }
             
@@ -116,26 +136,34 @@ fun MainScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
                     FilterChip(
                         selected = selectedCategoryId == null,
                         onClick = { documentViewModel.selectCategory(null) },
-                        label = { Text("전체") }
+                        label = { Text("전체") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                     )
                 }
                 items(categories) { category ->
                     FilterChip(
                         selected = selectedCategoryId == category.id,
                         onClick = { documentViewModel.selectCategory(category.id) },
-                        label = { Text(category.name) }
+                        label = { Text(category.name) },
+                         colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                     )
                 }
             }
 
-            HorizontalDivider()
+            Spacer(Modifier.height(8.dp))
 
             // Document List
             if (documents.isEmpty()) {
@@ -143,17 +171,22 @@ fun MainScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(bottom = 80.dp), // FAB 가리지 않게 하단 여백
+                    verticalArrangement = Arrangement.spacedBy(16.dp) // 카드 간 간격 넓힘
                 ) {
                     item {
-                        if (!selectionMode) {
-                            TextButton(
-                                onClick = { selectionMode = true }
+                        if (!selectionMode && documents.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
                             ) {
-                                Icon(Icons.Default.CheckCircle, "선택 모드", modifier = Modifier.size(20.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("여러 개 선택")
+                                TextButton(
+                                    onClick = { selectionMode = true }
+                                ) {
+                                    Icon(Icons.Default.CheckCircle, "선택 모드", modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("편집", style = MaterialTheme.typography.labelLarge)
+                                }
                             }
                         }
                     }
@@ -194,27 +227,33 @@ fun EmptyState(onAddDocument: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.Description,
+            imageVector = Icons.Default.FolderOpen, // 아이콘 변경
             contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.outline
+            modifier = Modifier.size(100.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
         Text(
-            text = "저장된 문서가 없습니다",
-            style = MaterialTheme.typography.titleMedium
+            text = "문서를 추가해보세요",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "통장사본, 사업자등록증 등을 저장하고\n언제든 빠르게 공유하세요",
+            text = "중요한 서류를 안전하게 보관하고\n필요할 때 바로 찾아보세요.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onAddDocument) {
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = onAddDocument,
+            shape = MaterialTheme.shapes.large,
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+        ) {
             Icon(Icons.Default.Add, null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("첫 문서 추가하기")
+            Text("문서 추가하기")
         }
     }
 }
@@ -229,13 +268,16 @@ fun DocumentCard(
 ) {
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
     
-    Card(
+    // 카드 스타일 변경: ElevatedCard
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
+        shape = MaterialTheme.shapes.medium, // 둥근 모서리
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
             containerColor = if (isSelected) 
-                MaterialTheme.colorScheme.primaryContainer 
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             else 
                 MaterialTheme.colorScheme.surface
         )
@@ -243,60 +285,92 @@ fun DocumentCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp), // 내부 패딩 증가
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (selectionMode) {
                 Checkbox(
                     checked = isSelected,
                     onCheckedChange = { onClick() },
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = 12.dp)
                 )
             }
             
             // Thumbnail
-            if (FileUtils.fileExists(document.fileUri)) {
-                AsyncImage(
-                    model = java.io.File(document.fileUri),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .padding(end = 12.dp),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.BrokenImage,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .padding(end = 12.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
+            Card(
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.size(64.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                 if (FileUtils.fileExists(document.fileUri)) {
+                    AsyncImage(
+                        model = java.io.File(document.fileUri),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                         Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    }
+                }
             }
+            
+            Spacer(Modifier.width(16.dp))
             
             // Document Info
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = document.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = document.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                
                 Spacer(Modifier.height(4.dp))
+                
+                if (!document.memo.isNullOrBlank()) {
+                     Text(
+                        text = document.memo!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                     Spacer(Modifier.height(8.dp))
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (categoryName != null) {
-                        AssistChip(
-                            onClick = { },
-                            label = { Text(categoryName, style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.height(24.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = MaterialTheme.shapes.extraSmall,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text(
+                                text = categoryName, 
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                     Text(
                         text = dateFormatter.format(Date(document.updatedAt)),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
             }
@@ -305,7 +379,8 @@ fun DocumentCard(
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

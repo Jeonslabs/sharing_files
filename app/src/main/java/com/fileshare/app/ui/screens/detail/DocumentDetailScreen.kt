@@ -1,6 +1,9 @@
 package com.fileshare.app.ui.screens.detail
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -74,76 +77,73 @@ fun DocumentDetailScreen(
             ) {
                 // Image Pager
                 if (doc.imageUris.isNotEmpty()) {
-                    Box {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)) // 배경색 추가
+                    ) {
                         HorizontalPager(
                             state = pagerState,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 400.dp)
+                                .height(400.dp) // 높이 고정
                         ) { page ->
                             val fileUri = doc.imageUris[page]
                             val isPdf = fileUri.endsWith(".pdf", ignoreCase = true)
                             
-                            if (FileUtils.fileExists(fileUri)) {
-                                if (isPdf) {
-                                    // PDF Icon
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(300.dp)
-                                            .clickable {
-                                                FileUtils.openFile(context, fileUri)
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (FileUtils.fileExists(fileUri)) {
+                                    if (isPdf) {
+                                        // PDF Icon
                                         Column(
+                                            modifier = Modifier
+                                                .clickable { FileUtils.openFile(context, fileUri) }
+                                                .padding(16.dp),
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            verticalArrangement = Arrangement.spacedBy(16.dp)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.PictureAsPdf,
                                                 contentDescription = "PDF",
-                                                modifier = Modifier.size(100.dp),
+                                                modifier = Modifier.size(80.dp),
                                                 tint = MaterialTheme.colorScheme.error
                                             )
                                             Text(
-                                                "PDF 파일",
-                                                style = MaterialTheme.typography.titleLarge
-                                            )
-                                            Text(
-                                                "클릭하여 보기",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.outline
+                                                "PDF 문서 열기",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary
                                             )
                                         }
+                                    } else {
+                                        // Image
+                                        AsyncImage(
+                                            model = java.io.File(fileUri),
+                                            contentDescription = "${doc.title} - 이미지 ${page + 1}",
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable {
+                                                    selectedImageIndex = page
+                                                    showImageDialog = true
+                                                },
+                                            contentScale = ContentScale.Fit
+                                        )
                                     }
                                 } else {
-                                    // Image
-                                    AsyncImage(
-                                        model = java.io.File(fileUri),
-                                        contentDescription = "${doc.title} - 이미지 ${page + 1}",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                selectedImageIndex = page
-                                                showImageDialog = true
-                                            },
-                                        contentScale = ContentScale.Fit
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(200.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.BrokenImage,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(80.dp),
-                                        tint = MaterialTheme.colorScheme.outline
-                                    )
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.BrokenImage,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(64.dp),
+                                            tint = MaterialTheme.colorScheme.outline
+                                        )
+                                        Text("이미지를 찾을 수 없습니다", style = MaterialTheme.typography.bodyMedium)
+                                    }
                                 }
                             }
                         }
@@ -152,15 +152,16 @@ fun DocumentDetailScreen(
                         if (doc.imageUris.size > 1) {
                             Surface(
                                 modifier = Modifier
-                                    .align(Alignment.BottomEnd)
+                                    .align(Alignment.BottomCenter)
                                     .padding(16.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                                shape = MaterialTheme.shapes.small
+                                color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.6f),
+                                shape = MaterialTheme.shapes.extraLarge, // 둥근 캡슐 모양
+                                contentColor = MaterialTheme.colorScheme.inverseOnSurface
                             ) {
                                 Text(
                                     text = "${pagerState.currentPage + 1} / ${doc.imageUris.size}",
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.bodySmall
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }
@@ -169,81 +170,101 @@ fun DocumentDetailScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
+                            .height(250.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.BrokenImage,
+                                imageVector = Icons.Default.ImageNotSupported,
                                 contentDescription = null,
-                                modifier = Modifier.size(80.dp),
-                                tint = MaterialTheme.colorScheme.outline
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                             )
-                            Text("이미지 없음", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "첨부된 이미지가 없습니다",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
-
-                HorizontalDivider()
 
                 // Document Info
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(24.dp), // 패딩 증가
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    // Title
-                    Text(
-                        text = doc.title,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-
-                    // Category
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Category, null, modifier = Modifier.size(20.dp))
+                    // Header Section (Title & Category)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = category?.name ?: "미분류",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                text = dateFormatter.format(Date(doc.createdAt)),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
                         Text(
-                            text = category?.name ?: "미분류",
-                            style = MaterialTheme.typography.bodyLarge
+                            text = doc.title,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    // Memo
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                    // Memo Section
                     if (!doc.memo.isNullOrBlank()) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "메모",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
                             )
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Notes, null, modifier = Modifier.size(20.dp))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("메모", style = MaterialTheme.typography.titleSmall)
-                                }
-                                Spacer(Modifier.height(8.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                            ) {
                                 Text(
                                     text = doc.memo,
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(16.dp)
                                 )
                             }
                         }
                     }
 
-                    HorizontalDivider()
-
                     // Metadata
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MetadataRow("이미지 개수", "${doc.imageUris.size}개")
-                        MetadataRow("생성일", dateFormatter.format(Date(doc.createdAt)))
-                        MetadataRow("수정일", dateFormatter.format(Date(doc.updatedAt)))
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), MaterialTheme.shapes.medium)
+                            .padding(16.dp)
+                    ) {
+                        MetadataRow("이미지", "${doc.imageUris.size}개")
+                        MetadataRow("최근 수정", dateFormatter.format(Date(doc.updatedAt)))
                         if (doc.shareCount > 0) {
                             MetadataRow("공유 횟수", "${doc.shareCount}회")
                         }
@@ -259,12 +280,20 @@ fun DocumentDetailScreen(
                                 documentViewModel.incrementShareCount(documentId)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = doc.imageUris.isNotEmpty()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = doc.imageUris.isNotEmpty(),
+                        shape = MaterialTheme.shapes.large,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
-                        Icon(Icons.Default.Share, null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("공유하기")
+                        Icon(Icons.Default.Share, null, modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text("파일 공유하기", style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }
@@ -274,25 +303,23 @@ fun DocumentDetailScreen(
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                icon = { Icon(Icons.Default.Warning, null) },
-                title = { Text("이 문서를 삭제하시겠습니까?") },
-                text = { Text("삭제된 문서는 복구할 수 없습니다.") },
+                icon = { Icon(Icons.Default.DeleteForever, null, tint = MaterialTheme.colorScheme.error) },
+                title = { Text("문서 삭제") },
+                text = { Text("정말 이 문서를 삭제하시겠습니까?\n삭제된 문서는 복구할 수 없습니다.", textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
                 confirmButton = {
-                    TextButton(
+                    Button(
                         onClick = {
                             documentViewModel.deleteDocument(doc)
                             showDeleteDialog = false
                             onNavigateBack()
                         },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
                         Text("삭제")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) {
+                    OutlinedButton(onClick = { showDeleteDialog = false }) {
                         Text("취소")
                     }
                 }
