@@ -1,15 +1,19 @@
 package com.fileshare.app.ui.screens.settings
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.fileshare.app.domain.model.Category
 import com.fileshare.app.viewmodel.CategoryViewModel
@@ -49,9 +53,29 @@ fun CategoryManagementScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            items(categories) { category ->
+            itemsIndexed(categories) { index, category ->
                 CategoryItem(
                     category = category,
+                    isFirst = index == 0,
+                    isLast = index == categories.size - 1,
+                    onMoveUp = {
+                        if (index > 0) {
+                            val newList = categories.toMutableList()
+                            val prev = newList[index - 1]
+                            newList[index - 1] = category
+                            newList[index] = prev
+                            categoryViewModel.updateCategoryOrder(newList)
+                        }
+                    },
+                    onMoveDown = {
+                        if (index < categories.size - 1) {
+                            val newList = categories.toMutableList()
+                            val next = newList[index + 1]
+                            newList[index + 1] = category
+                            newList[index] = next
+                            categoryViewModel.updateCategoryOrder(newList)
+                        }
+                    },
                     onEdit = { showEditCategoryDialog = category },
                     onDelete = { showDeleteConfirmDialog = category }
                 )
@@ -168,6 +192,10 @@ fun CategoryManagementScreen(
 @Composable
 private fun CategoryItem(
     category: Category,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -183,6 +211,18 @@ private fun CategoryItem(
         },
         trailingContent = {
             Row {
+                IconButton(
+                    onClick = onMoveUp,
+                    enabled = !isFirst
+                ) {
+                    Icon(Icons.Default.ArrowUpward, "위로 이동")
+                }
+                IconButton(
+                    onClick = onMoveDown,
+                    enabled = !isLast
+                ) {
+                    Icon(Icons.Default.ArrowDownward, "아래로 이동")
+                }
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, "수정")
                 }
