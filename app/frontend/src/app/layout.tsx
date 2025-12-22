@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
     title: 'Contract Management',
     description: 'Internal app for recurring contracts',
+    verification: {
+        google: 'google89684efc3a318461',
+    },
 }
 
 export default function RootLayout({
